@@ -24,7 +24,7 @@ logger.addHandler(f_handler)
 u_south_1 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Group July 2021.xlsx"
 u_south_2 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Individual July 2021.xlsx"
 
-file_data = {'Group Combined': None, 'McClurg': None, 'Pub': None, 'Stirlings': None, 'Cup Gown': None,	'St Andrews': None}
+file_data = {'Group Combined': None, 'McClurg': None, 'Pub': None, 'Stirlings': None, 'Cup Gown': None,	'St Andrews': None, 'Key': None}
 
 def get_dict_from_database(filepath):    
     conn = sqlite3.connect(filepath)
@@ -63,6 +63,17 @@ def convert_to_csv(input_file, output_file, skiprows=7):
     df.to_csv(output_file, index=False, encoding='utf-8')
     return output_file
 
+def create_excel_file(report_file_path):
+    with pd.ExcelWriter(report_file_path) as writer: 
+        for site, data in file_data.items():
+            if not data:
+                continue
+            if site != 'Key':           
+                df = pd.DataFrame(data, columns=get_header()) 
+                df.to_excel(writer, sheet_name=site, index=False)
+            else:
+                df = pd.DataFrame(data)            
+                df.to_excel(writer, sheet_name=site, index=False, header=False)
 
 def find_first_header_row(filepath):
     """
@@ -81,6 +92,7 @@ def get_category(item_number):
     if category != 'NA':
         category = int(category)
     return category
+
 
 def parse_row(row):
 	"""
@@ -138,6 +150,13 @@ def parse_file_1(filepath):
                     data.append(row)
     file_data['Group Combined'] = data
 
+def parse_key_file(filepath):
+    data = []
+    with open(filepath, encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:                        
+            data.append(row)
+    file_data['Key'] = data
 
 def row_is_location(text):
     """Return True if a row is a location header row else False."""
@@ -156,26 +175,24 @@ def get_files_from_folder(folder):
     files.sort(key=lambda file: file.name)
     return files
 
-def run_report(file_1, file_2):
+def run_report(file_1, file_2, key_file, report_file_path):
     """
-    Manager function to run all necessary functions to write the report(s)."""   
-    totals_file = convert_to_csv(file_1, 'u_south_1.csv', skiprows=7)
+    Manager function to run all necessary functions to write the report.
+    """   
+    totals_file = convert_to_csv(file_1, r'reports/u_south_1.csv', skiprows=7)
     parse_file_1(totals_file)
-    sites_file = convert_to_csv(file_2, 'u_south_2.csv', skiprows=7)
-    parse_file_2(sites_file)      
-          
-    with pd.ExcelWriter("univ_south_august.xlsx") as writer: 
-        for site, data in file_data.items():
-            if not data:
-                continue             
-            df = pd.DataFrame(data, columns=get_header())           
-            df.to_excel(writer, sheet_name=site, index=False)
+    sites_file = convert_to_csv(file_2, r'reports/u_south_2.csv', skiprows=7)
+    parse_file_2(sites_file)  
+    parse_key_file(key_file)    
+    create_excel_file(report_file_path)         
 
 
 def main():
-    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\group.xlsx'
-    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\individual.xlsx'    
-    run_report(file_1, file_2) 
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-individual.xlsx'   
+    key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
+    report_file = r'reports/univ-south-2021-10.xlsx'
+    run_report(file_1, file_2, key_file, report_file_path=report_file) 
     
 
 

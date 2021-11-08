@@ -16,12 +16,14 @@ Examples:
 	3) Univ of South Individual July 2021.xlsx (individual locations that need separation into individual tabs)
 	4) Univ of South Example Desired Output.xlsx (desired output)
 	
-Warning:
+Warnings:
 	Univeristy of the South file structure is different from dairy queen:
 		- merged cells in H6: M7
 		- we need the header info from rows 6 and 7 for columns H thru M inclusive)
 		- row 8 is the first location name
 	
+	You may have to open and resave the input files. Openpyxl (used by Pandas) has a strange flaw. 
+	I wasn't able to process the files for August, September and October 2021 until I opened and saved them.
 
 Tab names:
 
@@ -32,7 +34,7 @@ Tab names:
 	Cup Gown
 	St Andrews
 	
-	Key (this is a reference sheet of category numbers and otehr info)
+	Key (this is a reference sheet of category numbers and other info)
 	---
 	
 Categories

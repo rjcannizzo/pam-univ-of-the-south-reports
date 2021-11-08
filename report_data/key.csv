@@ -1,0 +1,21 @@
+﻿Key,
+,
+Category,
+1,Healthcare
+2,Dairy
+3,Meats
+4,Seafood
+5,Poultry
+6,Frozen
+7,Dry
+8,Disposables
+9,Chemicals
+10,Smallwares
+11,Produce
+12,Beverage
+,
+,
+Stock Type,
+S,Stocked in Nashville Warehouse
+R,Remote; drop ships from Sysco's Central Warehouse via UPS; approx one week lead
+N,Non-stock; special order.  Lead times vary depedning on vendor order cycle and minimum order requirements.  Avg lead time 2-3 weeks

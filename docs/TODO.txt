@@ -1,21 +1,6 @@
 
-Manager function
-
 PROBLEMS:
-	group totals (tab 1) has no 'CW' column (cause: parse_row() doesn't work the same way for both files?!?!)
-	tab 1 has floats in column 'Pack' column (this is not hte case with subsequnt tabs)
-	
-
-
-
-write Excel data as int or float where necessary
-- ok to store as text: item #, Pack, MPC Code
-- target the last 9 columns
-- int columns: case quantity, split quantity
-
-add categories to output
-
-* Pandas reads float by default? Tweak 
+	Need to add the 'key' tab
 
 Helper functions needed:
 	- determine lines to skip (usually 7)
