@@ -2,9 +2,10 @@
 Explore the input files to determine how to create the app(s)
 2021-11-07
 """
+import csv
 import pandas as pd
 import re
-import csv
+import sqlite3
 from parsers import parse_float, parse_int, parse_string
 
 dq_file = r"D:\Python\projects\pam\2021\Excel_cleanup\project\examples\DQ Prop chart 11.5.21 - Generic Example.xlsx"
@@ -87,7 +88,7 @@ def write_data_to_csv(filepath, data):
 
 
 def row_is_location(text):
-    # sites = {"ST. ANDREWS", "STIRLING'S COFFEE HOUSE", "CUP & GOWN", "SOUTH MCCLURG DINING", "PUB"}
+    """Return True if a row is a location header row else False."""
     sites = {"ST. ANDREWS": "St Andrews", "STIRLING'S COFFEE HOUSE": "Stirlings", "CUP & GOWN": "Cup Gown", "SOUTH MCCLURG DINING": "McClurg", "PUB": "Pub" }
     for site in sites.keys():
         mo = re.search(site, text)
@@ -128,11 +129,10 @@ def parse_row(row):
 	"""
 	column_parsers = [parse_string, parse_string, parse_string, parse_string, parse_string, parse_string, parse_string,
         parse_int, parse_float, parse_float, parse_int, parse_float, parse_float, parse_float, parse_float, parse_float]
-	parsed_data = [func(field)
-				   for func, field in zip(column_parsers, row)]
-	return parsed_data           
+	return [func(field) for func, field in zip(column_parsers, row)]
+	        
 
-def run():
+def run_report():
     totals_file = convert_to_csv(u_south_1, 'u_south_1.csv', skiprows=7)
     parse_totals_file(totals_file)
     sites_file = convert_to_csv(u_south_2, 'u_south_2.csv', skiprows=7)
@@ -146,7 +146,7 @@ def run():
             df.to_excel(writer, sheet_name=site, index=False)
 
 def main():
-    run()
+    run_report()
 
 
 if __name__ == '__main__':
