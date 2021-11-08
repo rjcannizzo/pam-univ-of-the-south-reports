@@ -1,0 +1,26 @@
+
+Manager function
+
+write Excel data as int or float where necessary
+
+create category database
+
+add categories to output
+
+Helper functions needed:
+	- determine lines to skip (usually 7)
+	- differentiate between 'group' and 'individual site' Excel files
+	
+
+	
+Document functions
+
+Logging
+
+Exception handling
+
+Next: web app
+
+
+	
+	

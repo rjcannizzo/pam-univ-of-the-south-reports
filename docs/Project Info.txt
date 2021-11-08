@@ -1,0 +1,52 @@
+There are two main objectives:
+
+	I. remove the empty header rows at the top, total rows and any merged cells (fluff remover)
+	II. University of the South report (two input files)
+		A) create a 'consolidated report' (all locations) on tab 1
+		B) report for individual location on separate tabs 
+			note: remove items that have no sales (columns H thru M inclusive). The 'quantity' columns are H and K
+		
+III. a 'category database' mapping category (column A) to item # in column B for University of the South .
+
+
+Examples:
+	
+	1) DQ Prop chart 11.5.21 - Generic Example.xlsx (DQ generic example)
+	2) Univ of South Group July 2021.xlsx (use this file to create tab 1, the consolidated data for all locations)
+	3) Univ of South Individual July 2021.xlsx (individual locations that need separation into individual tabs)
+	4) Univ of South Example Desired Output.xlsx (desired output)
+	
+Warning:
+	Univeristy of the South file structure is different from dairy queen:
+		- merged cells in H6: M7
+		- we need the header info from rows 6 and 7 for columns H thru M inclusive)
+		- row 8 is the first location name
+	
+
+Tab names:
+
+	Group Combined (tab 1)
+	McClurg
+	Pub
+	Stirlings
+	Cup Gown
+	St Andrews
+	
+	Key (this is a reference sheet of category numbers and otehr info)
+	---
+	
+Categories
+1	Healthcare
+2	Dairy
+3	Meats
+4	Seafood
+5	Poultry
+6	Frozen
+7	Dry
+8	Disposables
+9	Chemicals
+10	Smallwares
+11	Produce
+12	Beverage
+
+	

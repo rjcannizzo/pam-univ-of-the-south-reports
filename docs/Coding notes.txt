@@ -1,0 +1,32 @@
+Output headers: "Category,Item #,Stock Type,Pack,Size,Brand,Description,MPC Code,CW,Cs Qty,Cs Total $,Cs Avg $,Split Qty,Split Total $,Split Avg $,Weight,Total Sales $"
+
+Input Headers: 
+
+	After converting to csv, we done need column names that start with 'Unnamed'
+	
+	
+Columns 7 and 11 (zero-indexed) are the case or split quantity columns 
+
+Creating Excel file with multiple sheets: ExcelWriter object
+
+	To write to multiple sheets it is necessary to create an ExcelWriter object with a target file name, and specify a sheet in the file to write to.
+	Multiple sheets may be written to by specifying unique sheet_name. With all data written to the file it is necessary to save the changes. 
+	Note that creating an ExcelWriter object with a file name that already exists will result in the contents of the existing file being erased.
+	
+	Parameters
+	
+	if_sheet_exists{‘error’, ‘new’, ‘replace’}, default ‘error’
+
+    How to behave when trying to write to a sheet that already exists (append mode only).
+        error: raise a ValueError.
+        new: Create a new sheet, with a name determined by the engine.
+        replace: Delete the contents of the sheet before writing to it.
+	
+	Syntax:
+	
+	df1 = pd.DataFrame([["AAA", "BBB"]], columns=["Spam", "Egg"])
+	df2 = pd.DataFrame([["ABC", "XYZ"]], columns=["Foo", "Bar"])
+
+	with ExcelWriter("path_to_file.xlsx") as writer:
+		df1.to_excel(writer, sheet_name="Sheet1")
+		df2.to_excel(writer, sheet_name="Sheet2")
