@@ -1,5 +1,5 @@
 """
-
+Write reports for The University of the South. Requires two input files plus the 'Key' tab's csv file.
 2021-11-08
 """
 import csv
@@ -67,6 +67,7 @@ def convert_to_csv(input_file, output_file, skiprows=7):
     df.to_csv(output_file, index=False, encoding='utf-8')
     return output_file
 
+
 def create_excel_file(report_file_path):
     """
     Create an Excel file with a tab for every entry in the file_data dictionary IF there's data for the tab.
@@ -82,16 +83,6 @@ def create_excel_file(report_file_path):
             else:
                 df = pd.DataFrame(data)            
                 df.to_excel(writer, sheet_name=site, index=False, header=False)
-
-def find_first_header_row(filepath):
-    """
-    I may need this to determine the number of rows to skip when running convert_to_csv().
-    Series.str.find('Item #')
-    :param filepath: full path to the Excel file
-    :return: 
-    """
-    df = pd.read_excel(filepath, usecols=[0], squeeze=True)    
-    a = df.str.find('Item #') # returns 0.0 if found
 
 
 def get_category(item_number):
@@ -199,14 +190,18 @@ def run_report(file_1, file_2, key_file, report_file_path):
     create_excel_file(report_file_path)         
 
 
-def main():
+def example_usage():
+    " Requires two input Excel files plus the 'Key' tab's csv file."
     file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-group.xlsx'
     file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-individual.xlsx'   
     key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
     report_file = r'reports/univ-south-2021-10.xlsx'
     run_report(file_1, file_2, key_file, report_file_path=report_file) 
-    
 
+def main():
+    # see example_usage()
+    pass
+    
 
 if __name__ == '__main__':
     main()
