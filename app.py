@@ -7,6 +7,7 @@ import logging
 import pandas as pd
 import re
 import sqlite3
+from pathlib import Path
 from parsers import parse_float, parse_int, parse_string
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,15 @@ u_south_1 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ o
 u_south_2 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Individual July 2021.xlsx"
 
 file_data = {'Group Combined': None, 'McClurg': None, 'Pub': None, 'Stirlings': None, 'Cup Gown': None,	'St Andrews': None}
+
+def get_dict_from_database(filepath):    
+    conn = sqlite3.connect(filepath)
+    cursor = conn.cursor()
+    cursor.execute("SELECT item, category from category;")
+    data = {str(key): value for key, value in cursor.fetchall()}
+    return data    
+
+CATEGORIES = get_dict_from_database(r'D:\Python\projects\pam\2021\univ_south_report_tool\categories.db')
 
 def get_header():
     """
@@ -66,8 +76,11 @@ def find_first_header_row(filepath):
 
 
 def get_category(item_number):
-    return 'NA'
-
+    """Return the category for an item number if it's in the database. else 'NA'"""
+    category = CATEGORIES.get(item_number, 'NA')
+    if category != 'NA':
+        category = int(category)
+    return category
 
 def parse_row(row):
 	"""
@@ -99,7 +112,7 @@ def parse_file_2(filepath):
                 if any([case_quantity > 0, split_quantity > 0]):
                     row = [item for item in row if not item.startswith('Unnamed')]
                     row = parse_row(row)  
-                    row.insert(0, get_category(row[1]))                                      
+                    row.insert(0, get_category(row[0]))                                      
                     data.append(row)
 
         file_data[location] = data
@@ -121,7 +134,7 @@ def parse_file_1(filepath):
                 if any([case_quantity > 0, split_quantity > 0]):
                     row = [item for item in row if not item.startswith('Unnamed')]                     
                     row = parse_row(row)     
-                    row.insert(0, get_category(row[1]))              
+                    row.insert(0, get_category(row[0]))              
                     data.append(row)
     file_data['Group Combined'] = data
 
@@ -136,16 +149,22 @@ def row_is_location(text):
     return False
 
 
-def run_report():
+def get_files_from_folder(folder):
+    files = []
+    for file in Path(folder).glob('*.xlsx'):
+        files.append(file)
+    files.sort(key=lambda file: file.name)
+    return files
+
+def run_report(file_1, file_2):
     """
-    Manager function to run all necessary functions to write the report(s).
-    """    
-    totals_file = convert_to_csv(u_south_1, 'u_south_1.csv', skiprows=7)
+    Manager function to run all necessary functions to write the report(s)."""   
+    totals_file = convert_to_csv(file_1, 'u_south_1.csv', skiprows=7)
     parse_file_1(totals_file)
-    sites_file = convert_to_csv(u_south_2, 'u_south_2.csv', skiprows=7)
+    sites_file = convert_to_csv(file_2, 'u_south_2.csv', skiprows=7)
     parse_file_2(sites_file)      
           
-    with pd.ExcelWriter("group_text.xlsx") as writer: 
+    with pd.ExcelWriter("univ_south_august.xlsx") as writer: 
         for site, data in file_data.items():
             if not data:
                 continue             
@@ -154,7 +173,10 @@ def run_report():
 
 
 def main():
-    run_report()
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\individual.xlsx'    
+    run_report(file_1, file_2) 
+    
 
 
 if __name__ == '__main__':
