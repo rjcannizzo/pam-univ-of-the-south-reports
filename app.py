@@ -27,10 +27,14 @@ u_south_2 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ o
 file_data = {'Group Combined': None, 'McClurg': None, 'Pub': None, 'Stirlings': None, 'Cup Gown': None,	'St Andrews': None, 'Key': None}
 
 def get_dict_from_database(filepath):    
+    """
+    Return a dictionary with item numbers for keys and categories for values.
+    """
     conn = sqlite3.connect(filepath)
     cursor = conn.cursor()
     cursor.execute("SELECT item, category from category;")
     data = {str(key): value for key, value in cursor.fetchall()}
+    conn.close()
     return data    
 
 CATEGORIES = get_dict_from_database(r'D:\Python\projects\pam\2021\univ_south_report_tool\categories.db')
@@ -43,6 +47,7 @@ def get_header():
     
 
 def column_is_integer(text):
+    """Return True if a column contains an integer else False."""
     try:
         int(text)
     except ValueError:
@@ -52,18 +57,21 @@ def column_is_integer(text):
 
 def convert_to_csv(input_file, output_file, skiprows=7):
     """
-    Convert an Excel file to a csv.
+    Convert a tab in an Excel file to a csv.
     :param skiprows: number of rows to skip when reading the Excel file.
     :param input_file: full path to the Excel file to convert.
     :param output_file: full path of the csv file to write.
     :return: path to csv file as a string?
-    """    
-    converters={0: parse_int, 1: parse_int}
+    """        
     df = pd.read_excel(input_file, skiprows=skiprows, usecols="A:N,P")
     df.to_csv(output_file, index=False, encoding='utf-8')
     return output_file
 
 def create_excel_file(report_file_path):
+    """
+    Create an Excel file with a tab for every entry in the file_data dictionary IF there's data for the tab.
+    Also adds a 'Key' tab that's a listing of categories and their meaning.
+    """
     with pd.ExcelWriter(report_file_path) as writer: 
         for site, data in file_data.items():
             if not data:
@@ -87,7 +95,9 @@ def find_first_header_row(filepath):
 
 
 def get_category(item_number):
-    """Return the category for an item number if it's in the database. else 'NA'"""
+    """Return the category for an item number if it's in the database else 'NA'.
+    Categories are returned as integers.
+    """
     category = CATEGORIES.get(item_number, 'NA')
     if category != 'NA':
         category = int(category)
@@ -96,7 +106,7 @@ def get_category(item_number):
 
 def parse_row(row):
 	"""
-	Return a list of data cleaned by parsers (e.g. parse_int)		
+	Return a list of data cleaned by the specified parsers (e.g. parse_int)		
 	"""
 	column_parsers = [parse_string, parse_int, parse_string, parse_string, parse_string, parse_string, parse_string,
         parse_int, parse_float, parse_float, parse_int, parse_float, parse_float, parse_float, parse_float, parse_float]
@@ -104,6 +114,9 @@ def parse_row(row):
 
 
 def parse_file_2(filepath):
+    """
+    Read a csv file with data for the 'site' tabs. Each tab's data is added to the file_data dictionary.
+    """
     location = None
     data = []
     with open(filepath, encoding='utf-8') as f:
@@ -132,7 +145,8 @@ def parse_file_2(filepath):
 
 def parse_file_1(filepath):
     """
-    Returns a list of row data from the first of two files needed. This is consolidated data for tab 1 of the report.
+    Parses row data from a csv file and adds it to the file_data dictionary. 
+    This is for the 'Group Combined' tab (tab 1) of the report.
     """
     data = []
     with open(filepath, encoding='utf-8') as f:
@@ -150,13 +164,18 @@ def parse_file_1(filepath):
                     data.append(row)
     file_data['Group Combined'] = data
 
+
 def parse_key_file(filepath):
+    """
+    Add the data needed for the 'Key' tab to file_data dictionary.
+    """
     data = []
     with open(filepath, encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:                        
             data.append(row)
     file_data['Key'] = data
+
 
 def row_is_location(text):
     """Return True if a row is a location header row else False."""
@@ -167,13 +186,6 @@ def row_is_location(text):
             return sites[site]
     return False
 
-
-def get_files_from_folder(folder):
-    files = []
-    for file in Path(folder).glob('*.xlsx'):
-        files.append(file)
-    files.sort(key=lambda file: file.name)
-    return files
 
 def run_report(file_1, file_2, key_file, report_file_path):
     """
