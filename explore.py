@@ -5,17 +5,18 @@ Explore the input files to determine how to create the app(s)
 import pandas as pd
 import re
 import csv
+from parsers import parse_float, parse_int, parse_string
 
 dq_file = r"D:\Python\projects\pam\2021\Excel_cleanup\project\examples\DQ Prop chart 11.5.21 - Generic Example.xlsx"
-u_south_1 = r"D:\Python\projects\pam\2021\Excel_cleanup\project\examples\Univ of South Group July 2021.xlsx"
-u_south_2 = r"D:\Python\projects\pam\2021\Excel_cleanup\project\examples\Univ of South Individual July 2021.xlsx"
+u_south_1 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Group July 2021.xlsx"
+u_south_2 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Individual July 2021.xlsx"
 
 # for sheet_name, data in file:data
 file_data = {'Group Combined': None, 'McClurg': None, 'Pub': None, 'Stirlings': None, 'Cup Gown': None,	'St Andrews': None}
 
 def get_header():
     """
-    The header should have 16 columns
+    Return a list of column headers. The header should have 16 columns.
     """
     return ['Category','Item #','Pack','Size','Brand','Description','MPC Code','CW','Cs Qty','Cs Total $','Cs Avg $','Split Qty','Split Total $','Split Avg $','Weight','Total Sales $']
     
@@ -71,7 +72,8 @@ def parse_totals_file(filepath):
                 split_quantity = float(row[10])
                 if any([case_quantity > 0, split_quantity > 0]):
                     row = [item for item in row if not item.startswith('Unnamed')]
-                    row.insert(0, get_category(row[1]))                    
+                    row.insert(0, get_category(row[1]))   
+                    row = parse_row(row)                 
                     data.append(row)
     file_data['Group Combined'] = data
 
@@ -114,18 +116,21 @@ def parse_sites_file(filepath):
                 split_quantity = float(row[10])
                 if any([case_quantity > 0, split_quantity > 0]):
                     row = [item for item in row if not item.startswith('Unnamed')]
-                    row.insert(0, get_category(row[1]))                    
+                    row.insert(0, get_category(row[1]))
+                    row = parse_row(row)                    
                     data.append(row)
 
         file_data[location] = data
-            
 
-def write_group_data_to_csv():
-    """This data is for tab 1; this was my initial test"""
-    filepath = convert_to_csv(u_south_1, 'u_south_1.csv', skiprows=7)
-    data = parse_file(filepath)
-    file_data['Group Combined'] = data
-    write_data_to_csv('u_south_group_output.csv', data)
+def parse_row(row):
+	"""
+	Return a list of data cleaned by parsers (e.g. parse_int)		
+	"""
+	column_parsers = [parse_string, parse_string, parse_string, parse_string, parse_string, parse_string, parse_string,
+        parse_int, parse_float, parse_float, parse_int, parse_float, parse_float, parse_float, parse_float, parse_float]
+	parsed_data = [func(field)
+				   for func, field in zip(column_parsers, row)]
+	return parsed_data           
 
 def run():
     totals_file = convert_to_csv(u_south_1, 'u_south_1.csv', skiprows=7)

@@ -2,6 +2,9 @@
 Manager function
 
 write Excel data as int or float where necessary
+- ok to store as text: item #, Pack, MPC Code
+- target the last 9 columns
+- int columns: case quantity, split quantity
 
 create category database
 
