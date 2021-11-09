@@ -4,6 +4,7 @@ Write reports for The University of the South. Requires two input files plus the
 """
 import csv
 import logging
+from openpyxl import load_workbook, Workbook
 import pandas as pd
 import re
 import sqlite3
@@ -84,6 +85,23 @@ def create_excel_file(report_file_path):
                 df = pd.DataFrame(data)            
                 df.to_excel(writer, sheet_name=site, index=False, header=False)
 
+def find_first_row_of_data(filepath):
+    """
+    Finds the first row of data for University of the South input Excel files.
+    We return row_count + 1 because the header is 2 rows, with one row after the one with 'Item #'.
+    There always seems to be a 5-row section for the Sysco image. Then comes a header of 1 or more rows.
+    This function won't work for other files like those for Dairy Queen. 
+    """
+    row_count = 0
+    wb = load_workbook(filepath, data_only=True)
+    first_sheet = wb.sheetnames[0]
+    sheet = wb[first_sheet]    
+    rows = sheet.values
+    for row in rows:        
+        row_count += 1
+        value = row[0]
+        if value == 'Item #':
+            return row_count + 1
 
 def get_category(item_number):
     """Return the category for an item number if it's in the database else 'NA'.
@@ -198,10 +216,45 @@ def example_usage():
     report_file = r'reports/univ-south-2021-10.xlsx'
     run_report(file_1, file_2, key_file, report_file_path=report_file) 
 
+
+def parse_file_1_openpyxl(filepath):
+    data = []
+    rows_to_skip = find_first_row_of_data(filepath)
+    wb = load_workbook(filepath, data_only=True)
+    sheet = wb[wb.sheetnames[0]]
+    rows = sheet.values
+    for _ in range(rows_to_skip):
+        next(rows)
+    for row in rows:           
+        if row[0].startswith('Count'):
+            break
+        else:                
+            case_quantity = row[7]
+            split_quantity = row[10]
+            if any([case_quantity > 0, split_quantity > 0]):
+                total_sales = row[15]
+                row = list(row[:14]) 
+                row.append(total_sales)
+                row.insert(0, get_category(row[0]))              
+                data.append(row)            
+
+    file_data['Group Combined'] = data    
+
+def openpy_example():
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-individual.xlsx'   
+    key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
+    report_file = r'reports/univ-south-2021-10.xlsx'
+    parse_file_1_openpyxl(file_1)    
+    sites_file = convert_to_csv(file_2, r'reports/u_south_2.csv', skiprows=7)
+    parse_file_2(sites_file)  
+    parse_key_file(key_file)    
+    create_excel_file(report_file)  
+
+
 def main():
-    # see example_usage()
-    pass
-    
+    openpy_example()
+
 
 if __name__ == '__main__':
     main()

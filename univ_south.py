@@ -97,6 +97,27 @@ class USREPORTER:
             parse_int, parse_float, parse_float, parse_int, parse_float, parse_float, parse_float, parse_float, parse_float]
         return [func(field) for func, field in zip(column_parsers, row)]
 
+    def parse_file_1(self, filepath):
+        """
+        Parses row data from a csv file and adds it to the file_data dictionary. 
+        This is for the 'Group Combined' tab (tab 1) of the report.
+        """
+        data = []
+        with open(filepath, encoding='utf-8') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                if row[0].startswith('Count'):
+                    break
+                else:                
+                    case_quantity = float(row[7])
+                    split_quantity = float(row[10])
+                    if any([case_quantity > 0, split_quantity > 0]):
+                        row = [item for item in row if not item.startswith('Unnamed')]                     
+                        row = self.parse_row(row)     
+                        row.insert(0, self.get_category(row[0]))              
+                        data.append(row)
+        self.file_data['Group Combined'] = data
+
     def parse_file_2(self, filepath):
         """
         Read a csv file with data for the 'site' tabs. Each tab's data is added to the file_data dictionary.
@@ -124,28 +145,7 @@ class USREPORTER:
                         row.insert(0, self.get_category(row[0]))                                      
                         data.append(row)
 
-            self.file_data[location] = data
-
-    def parse_file_1(self, filepath):
-        """
-        Parses row data from a csv file and adds it to the file_data dictionary. 
-        This is for the 'Group Combined' tab (tab 1) of the report.
-        """
-        data = []
-        with open(filepath, encoding='utf-8') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if row[0].startswith('Count'):
-                    break
-                else:                
-                    case_quantity = float(row[7])
-                    split_quantity = float(row[10])
-                    if any([case_quantity > 0, split_quantity > 0]):
-                        row = [item for item in row if not item.startswith('Unnamed')]                     
-                        row = self.parse_row(row)     
-                        row.insert(0, self.get_category(row[0]))              
-                        data.append(row)
-        self.file_data['Group Combined'] = data
+            self.file_data[location] = data    
 
     def parse_key_file(self, filepath):
         """
