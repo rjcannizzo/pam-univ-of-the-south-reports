@@ -220,7 +220,7 @@ def example_usage():
 def parse_file_1_openpyxl(filepath):
     data = []
     rows_to_skip = find_first_row_of_data(filepath)
-    wb = load_workbook(filepath, data_only=True)
+    wb = load_workbook(filepath, data_only=True)          
     sheet = wb[wb.sheetnames[0]]
     rows = sheet.values
     for _ in range(rows_to_skip):
@@ -238,7 +238,46 @@ def parse_file_1_openpyxl(filepath):
                 row.insert(0, get_category(row[0]))              
                 data.append(row)            
 
-    file_data['Group Combined'] = data    
+    file_data['Group Combined'] = data 
+    wb.close()   
+
+
+def parse_file_2_openpyxl(filepath):
+    """
+    Read a csv file with data for the 'site' tabs. Each tab's data is added to the file_data dictionary.
+    """
+    location = None
+    data = []
+    rows_to_skip = find_first_row_of_data(filepath)
+    wb = load_workbook(filepath, data_only=True)          
+    sheet = wb[wb.sheetnames[0]]
+    rows = sheet.values
+    for row in rows:   
+        if not row[0]:
+            continue
+        if not column_is_integer(row[0]):
+            site = row_is_location(row[0])
+            if site and data:
+                file_data[location] = data
+                data = []
+                location = site
+            if site and not data:
+                location = site
+                continue
+        else:                
+            case_quantity = row[7]
+            split_quantity = row[10]                
+            if any([case_quantity > 0, split_quantity > 0]):
+                total_sales = row[15]
+                row = list(row[:14]) 
+                row.append(total_sales)                    
+                row.insert(0, get_category(row[0]))                                      
+                data.append(row)
+
+    file_data[location] = data
+
+
+
 
 def openpy_example():
     file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-group.xlsx'
@@ -246,8 +285,7 @@ def openpy_example():
     key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
     report_file = r'reports/univ-south-2021-10.xlsx'
     parse_file_1_openpyxl(file_1)    
-    sites_file = convert_to_csv(file_2, r'reports/u_south_2.csv', skiprows=7)
-    parse_file_2(sites_file)  
+    parse_file_2_openpyxl(file_2)
     parse_key_file(key_file)    
     create_excel_file(report_file)  
 
