@@ -103,6 +103,7 @@ def find_first_row_of_data(filepath):
         row_count += 1
         value = row[0]
         if value == 'Item #':
+            wb.close()
             return row_count + 1
 
 
@@ -301,11 +302,7 @@ def openpy_example():
 
 
 def main():
-    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\group.xlsx'
-    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\individual.xlsx'   
-    key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
-    report_file = r'reports/univ-south-2021-08.xlsx' 
-    run_report(file_1, file_2, key_file, report_file_path=report_file) 
+    pass
 
 
 if __name__ == '__main__':

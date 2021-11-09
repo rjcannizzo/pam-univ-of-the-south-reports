@@ -26,6 +26,7 @@ def find_first_row_of_data():
         row_count += 1
         value = row[0]
         if value == 'Item #':
+            wb.close()
             return row_count + 1
 
 

@@ -5,7 +5,7 @@ Write reports for The University of the South. Requires two input files plus the
 import csv
 import logging
 from os import stat
-import openpyxl
+from openpyxl import load_workbook
 import pandas as pd
 import re
 import sqlite3
@@ -88,6 +88,41 @@ class USREPORTER:
             category = int(category)
         return category
 
+    def get_file_data_as_list(self, filepath):
+        """
+        Return a list of file data, skipping the header and any rows that do not have a value in column 1.
+        Header rows are determined by the function find_first_row_of_data().    
+        """
+        rows_to_skip = self.find_first_row_of_data(filepath)
+        wb = load_workbook(filepath, data_only=True)          
+        sheet = wb[wb.sheetnames[0]]
+        rows = sheet.values
+        for _ in range(rows_to_skip):
+            next(rows)
+        rows = [row for row in rows if row[0]]  
+        wb.close()   
+        return rows
+
+    @staticmethod
+    def find_first_row_of_data(filepath):
+        """
+        Finds the first row of data for University of the South input Excel files.
+        We return row_count + 1 because the header is 2 rows, with one row after the one with 'Item #'.
+        There always seems to be a 5-row section for the Sysco image. Then comes a header of 1 or more rows.
+        This function won't work for other files like those for Dairy Queen. 
+        """
+        row_count = 0
+        wb = load_workbook(filepath, data_only=True)
+        first_sheet = wb.sheetnames[0]
+        sheet = wb[first_sheet]    
+        rows = sheet.values
+        for row in rows:        
+            row_count += 1
+            value = row[0]
+            if value == 'Item #':
+                wb.close()
+                return row_count + 1
+    
     @staticmethod
     def parse_row(row):
         """
@@ -102,50 +137,51 @@ class USREPORTER:
         Parses row data from a csv file and adds it to the file_data dictionary. 
         This is for the 'Group Combined' tab (tab 1) of the report.
         """
-        data = []
-        with open(filepath, encoding='utf-8') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if row[0].startswith('Count'):
-                    break
-                else:                
-                    case_quantity = float(row[7])
-                    split_quantity = float(row[10])
-                    if any([case_quantity > 0, split_quantity > 0]):
-                        row = [item for item in row if not item.startswith('Unnamed')]                     
-                        row = self.parse_row(row)     
-                        row.insert(0, self.get_category(row[0]))              
-                        data.append(row)
-        self.file_data['Group Combined'] = data
+        data = []    
+        rows = self.get_file_data_as_list(filepath)
+        for row in rows:           
+            if row[0].startswith('Count'):
+                break
+            else:                
+                case_quantity = row[7]
+                split_quantity = row[10]
+                if any([case_quantity > 0, split_quantity > 0]):
+                    total_sales = row[15]
+                    row = list(row[:14]) 
+                    row.append(total_sales)
+                    row.insert(0, self.get_category(row[0]))              
+                    data.append(row)
+
+        self.file_data['Group Combined'] = data      
 
     def parse_file_2(self, filepath):
         """
         Read a csv file with data for the 'site' tabs. Each tab's data is added to the file_data dictionary.
         """
         location = None
-        data = []
-        with open(filepath, encoding='utf-8') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                if not self.column_is_integer(row[0]):
-                    site = self.row_is_location(row[0])
-                    if site and data:
-                        self.file_data[location] = data
-                        data = []
-                        location = site
-                    if site and not data:
-                        location = site
-                    continue
-                else:                
-                    case_quantity = float(row[7])
-                    split_quantity = float(row[10])
-                    if any([case_quantity > 0, split_quantity > 0]):
-                        row = [item for item in row if not item.startswith('Unnamed')]
-                        row = self.parse_row(row)  
-                        row.insert(0, self.get_category(row[0]))                                      
-                        data.append(row)
+        data = []        
+        rows = self.get_file_data_as_list(filepath)        
+        for row in rows:  
+            if not self.column_is_integer(row[0]):
+                site = self.row_is_location(row[0])
+                if site and data:
+                    self.file_data[location] = data
+                    data = []
+                    location = site
+                if site and not data:
+                    location = site
+                continue
+            else:                
+                case_quantity = row[7]
+                split_quantity = row[10]                
+                if any([case_quantity > 0, split_quantity > 0]):
+                    total_sales = row[15]
+                    row = list(row[:14]) 
+                    row.append(total_sales)                    
+                    row.insert(0, self.get_category(row[0]))                                      
+                    data.append(row)
 
-            self.file_data[location] = data    
+        self.file_data[location] = data    
 
     def parse_key_file(self, filepath):
         """
@@ -172,10 +208,8 @@ class USREPORTER:
         """
         Manager function to run all necessary functions to write the report.
         """   
-        totals_file = self.convert_to_csv(file_1, r'reports/u_south_1.csv', skiprows=7)
-        self.parse_file_1(totals_file)
-        sites_file = self.convert_to_csv(file_2, r'reports/u_south_2.csv', skiprows=7)
-        self.parse_file_2(sites_file)  
+        self.parse_file_1(file_1)        
+        self.parse_file_2(file_2)  
         self.parse_key_file(key_file)    
         self.create_excel_file(report_file_path)       
 
