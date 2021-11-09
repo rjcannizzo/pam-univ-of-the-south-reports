@@ -12,14 +12,14 @@ from pathlib import Path
 from parsers import parse_float, parse_int, parse_string
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 s_handler = logging.StreamHandler()
 f_handler = logging.FileHandler('logs/app.log')
 f_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 s_handler.setFormatter(formatter)
 f_handler.setFormatter(formatter)
-logger.addHandler(s_handler)
+# logger.addHandler(s_handler)
 logger.addHandler(f_handler)
 
 u_south_1 = r"D:\Python\projects\pam\2021\univ_south_report_tool\examples\Univ of South Group July 2021.xlsx"
@@ -78,12 +78,14 @@ def create_excel_file(report_file_path):
         for site, data in file_data.items():
             if not data:
                 continue
-            if site != 'Key':           
+            logger.info(site)
+            if site != 'Key':                     
                 df = pd.DataFrame(data, columns=get_header()) 
-                df.to_excel(writer, sheet_name=site, index=False)
-            else:
+                df.to_excel(writer, sheet_name=site, index=False)                
+            else:                
                 df = pd.DataFrame(data)            
                 df.to_excel(writer, sheet_name=site, index=False, header=False)
+               
 
 def find_first_row_of_data(filepath):
     """
@@ -102,6 +104,7 @@ def find_first_row_of_data(filepath):
         value = row[0]
         if value == 'Item #':
             return row_count + 1
+
 
 def get_category(item_number):
     """Return the category for an item number if it's in the database else 'NA'.
@@ -200,12 +203,10 @@ def run_report(file_1, file_2, key_file, report_file_path):
     """
     Manager function to run all necessary functions to write the report.
     """   
-    totals_file = convert_to_csv(file_1, r'reports/u_south_1.csv', skiprows=7)
-    parse_file_1(totals_file)
-    sites_file = convert_to_csv(file_2, r'reports/u_south_2.csv', skiprows=7)
-    parse_file_2(sites_file)  
+    parse_file_1_openpyxl(file_1)    
+    parse_file_2_openpyxl(file_2)
     parse_key_file(key_file)    
-    create_excel_file(report_file_path)         
+    create_excel_file(report_file_path)       
 
 
 def example_usage():
@@ -218,13 +219,8 @@ def example_usage():
 
 
 def parse_file_1_openpyxl(filepath):
-    data = []
-    rows_to_skip = find_first_row_of_data(filepath)
-    wb = load_workbook(filepath, data_only=True)          
-    sheet = wb[wb.sheetnames[0]]
-    rows = sheet.values
-    for _ in range(rows_to_skip):
-        next(rows)
+    data = []    
+    rows = get_file_data_as_list(filepath)
     for row in rows:           
         if row[0].startswith('Count'):
             break
@@ -236,10 +232,25 @@ def parse_file_1_openpyxl(filepath):
                 row = list(row[:14]) 
                 row.append(total_sales)
                 row.insert(0, get_category(row[0]))              
-                data.append(row)            
+                data.append(row)
 
-    file_data['Group Combined'] = data 
+    file_data['Group Combined'] = data      
+
+
+def get_file_data_as_list(filepath):
+    """
+    Return a list of file data, skipping the header and any rows that do not have a value in column 1.
+    Header rows are determined by the function find_first_row_of_data().    
+    """
+    rows_to_skip = find_first_row_of_data(filepath)
+    wb = load_workbook(filepath, data_only=True)          
+    sheet = wb[wb.sheetnames[0]]
+    rows = sheet.values
+    for _ in range(rows_to_skip):
+        next(rows)
+    rows = [row for row in rows if row[0]]  
     wb.close()   
+    return rows
 
 
 def parse_file_2_openpyxl(filepath):
@@ -248,13 +259,15 @@ def parse_file_2_openpyxl(filepath):
     """
     location = None
     data = []
-    rows_to_skip = find_first_row_of_data(filepath)
-    wb = load_workbook(filepath, data_only=True)          
-    sheet = wb[wb.sheetnames[0]]
-    rows = sheet.values
-    for row in rows:   
-        if not row[0]:
-            continue
+    # rows_to_skip = find_first_row_of_data(filepath)
+    # wb = load_workbook(filepath, data_only=True)          
+    # sheet = wb[wb.sheetnames[0]]
+    # rows = sheet.values    
+    # for _ in range(rows_to_skip):
+    #     next(rows)
+    rows = get_file_data_as_list(filepath)
+    logger.info(rows[:10])
+    for row in rows:  
         if not column_is_integer(row[0]):
             site = row_is_location(row[0])
             if site and data:
@@ -263,7 +276,7 @@ def parse_file_2_openpyxl(filepath):
                 location = site
             if site and not data:
                 location = site
-                continue
+            continue
         else:                
             case_quantity = row[7]
             split_quantity = row[10]                
@@ -276,14 +289,11 @@ def parse_file_2_openpyxl(filepath):
 
     file_data[location] = data
 
-
-
-
 def openpy_example():
-    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-group.xlsx'
-    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\october\2021-10-individual.xlsx'   
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\individual.xlsx'   
     key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
-    report_file = r'reports/univ-south-2021-10.xlsx'
+    report_file = r'reports/univ-south-2021-08.xlsx'    
     parse_file_1_openpyxl(file_1)    
     parse_file_2_openpyxl(file_2)
     parse_key_file(key_file)    
@@ -291,7 +301,11 @@ def openpy_example():
 
 
 def main():
-    openpy_example()
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\august\individual.xlsx'   
+    key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
+    report_file = r'reports/univ-south-2021-08.xlsx' 
+    run_report(file_1, file_2, key_file, report_file_path=report_file) 
 
 
 if __name__ == '__main__':
