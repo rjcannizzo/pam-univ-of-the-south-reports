@@ -162,7 +162,7 @@ def parse_file_1(filepath):
     This is for the 'Group Combined' tab (tab 1) of the report.
     """
     data = []
-    with open(filepath, encoding='utf-8') as f:
+    with open(filepath, encoding='utf-8', errors='replace') as f:
         reader = csv.reader(f)
         for row in reader:
             if row[0].startswith('Count'):
@@ -204,8 +204,10 @@ def run_report(file_1, file_2, key_file, report_file_path):
     """
     Manager function to run all necessary functions to write the report.
     """   
-    parse_file_1_openpyxl(file_1)    
-    parse_file_2_openpyxl(file_2)
+    group_file = convert_to_csv(file_1, 'u_south_1.csv', skiprows=7)
+    parse_file_1(group_file)
+    sites_file = convert_to_csv(file_2, 'u_south_2.csv', skiprows=7)    
+    parse_file_2(sites_file)
     parse_key_file(key_file)    
     create_excel_file(report_file_path)       
 
@@ -266,8 +268,7 @@ def parse_file_2_openpyxl(filepath):
     # rows = sheet.values    
     # for _ in range(rows_to_skip):
     #     next(rows)
-    rows = get_file_data_as_list(filepath)
-    logger.info(rows[:10])
+    rows = get_file_data_as_list(filepath)    
     for row in rows:  
         if not column_is_integer(row[0]):
             site = row_is_location(row[0])
@@ -302,7 +303,7 @@ def openpy_example():
 
 
 def main():
-    pass
+    openpy_example()
 
 
 if __name__ == '__main__':

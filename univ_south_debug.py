@@ -3,6 +3,7 @@ Write reports for The University of the South. Requires two input files plus the
 2021-11-09
 """
 import csv
+import logging
 from os import stat
 from openpyxl import load_workbook
 import pandas as pd
@@ -10,6 +11,17 @@ import re
 import sqlite3
 from pathlib import Path
 from parsers import parse_float, parse_int, parse_string
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+s_handler = logging.StreamHandler()
+f_handler = logging.FileHandler('logs/app.log')
+f_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+s_handler.setFormatter(formatter)
+f_handler.setFormatter(formatter)
+# logger.addHandler(s_handler)
+logger.addHandler(f_handler)
 
 class USREPORTER:
     def __init__(self, file_1, file_2, key_file, output_file_path, category_db) -> None:
@@ -201,16 +213,31 @@ class USREPORTER:
 
     def run_report(self):
         """
-        Manager function to run all the necessary functions to write a report.
+        Manager function to run all necessary functions to write the report.
         """   
         self.parse_file_1(self.file_1)        
         self.parse_file_2(self.file_2)  
         self.parse_key_file(self.key_file)    
         self.create_excel_file(self.output_file_path)  
         
+def example_usage():
+    " Requires two Excel files plus the 'Key' tab's csv file."
+    file_1 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\september\2021-09-group.xlsx'
+    file_2 = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\september\2021-09-individual.xlsx'   
+    key_file = r'D:\Python\projects\pam\2021\univ_south_report_tool\report_data\key.csv'
+    report_file = r'reports/univ-south-2021-09.xlsx'
+    db = r'D:\Python\projects\pam\2021\univ_south_report_tool\categories.db'
+    
+    reporter = USREPORTER(file_1, file_2, key_file, report_file, category_db=db)
+    reporter.run_report() 
 
+def main():
+    example_usage()
+    
+    
 
-
+if __name__ == '__main__':
+    main()
 
   
     
